@@ -6,6 +6,7 @@ import haxe.crypto.Hmac;
 import platform.node.Http;
 import haxe.io.Bytes;
 import oauth.Tokens;
+import haxe.Json;
 
 /**
  * Send a request to the API.
@@ -76,10 +77,10 @@ class Request {
 		credentials.set("oauth_signature", digest);
 	}
 
-	public function send ():String {
+	public function send (cb:Dynamic):Void {
 		var h = new Http(uri());
 		#if js
-		h.async = false;
+		h.async = true;//falseだった
 		#end
 		h.setHeader("Authorization", composeHeader());
 		if (data != null) {
@@ -87,14 +88,30 @@ class Request {
 			h.setPostData(postDataStr());
 		}
 		var ret = '';
-		h.onData = function(d) ret = d;
-		// 非同期ミスってね？
-		// onDataの後にデータ必要
-		// この関数は非同期関数であるべき
-		// 引数にcb, onDataに渡す。
-		// sendの関数スコープでres(atoken)を受け取れる
-		// Client.requestも.jsonToMapも.getAccessToken2も非同期関数になる
-		return ret;
+		h.onData = function(res_str) {
+			check_and_return(res_str, cb);
+		}
+		h.request(post);
+	}
+
+	function check_and_return(res_str:String, cb:Dynamic){
+		if (res_str.substr(0, 12) != "access_token"){
+			var res : Dynamic = Json.parse(res_str);
+			error_checker(res);
+			/* puserを通すとき */
+			cb({ id: res.id, name: res.name });
+		} else {
+			/* access_tokenを通すとき */
+			cb(res_str); // fb : access_token=CAAEIlhJBc5ABAE.....NFKKkaM&expires=5180024
+		}
+	}
+
+	function error_checker(res:Dynamic){
+		if ( Reflect.hasField(res, "error") ) {
+			if ( Reflect.hasField(res.error, "message") ) {
+				throw res.error.message;
+			}
+		}
 	}
 
 	function uri ():String {

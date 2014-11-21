@@ -161,7 +161,6 @@ class Http {
 			response.once('end', function() {
 				response.removeAllListeners("data");
 				response.removeAllListeners("end");
-
 				if (responseData != null) {
 					onData(responseData);
 				}
