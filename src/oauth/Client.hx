@@ -14,6 +14,31 @@ class Client {
 		this.consumer = consumer;
 	}
 
+	/*
+	public function getRequestToken (uri:String, callback:String, ?post:Bool = true):RequestToken {
+		if (!version.match(V1)) throw "Request token only applies to OAuth 1.";
+
+		var req = new Request(version, uri, consumer, null, post, null, { oauth_callback:callback } );
+		req.sign();
+		var result = strToMap(req.send());
+
+		if (!result.exists("oauth_token")) throw "Failed to get request token.";
+
+		return new RequestToken(result.get("oauth_token"), result.get("oauth_token_secret"));
+	}
+
+	public function getAccessToken1 (uri:String, verifier:String, ?post:Bool = true):Client {
+		if (!version.match(V1)) throw "Cannot call an OAuth 1 method from a non-OAuth 1 flow.";
+
+		var result = requestUrlEncoded(uri, post, { oauth_verifier:verifier });
+
+		if (!result.exists("oauth_token") || !result.exists("oauth_token_secret")) throw "Failed to get access token.";
+
+		accessToken = new OAuth1AccessToken(result.get("oauth_token"), result.get("oauth_token_secret"));
+		return this;
+	}
+	*/
+
 	public function getAccessToken2 (uri:String, code:String, redirectUri:String, ?post:Bool = true, cb:Dynamic):Void {
 		if (!version.match(V2)) throw "Cannot call an OAuth 2 method from a non-OAuth 2 flow.";
 		var req_param : Dynamic = {
