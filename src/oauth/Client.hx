@@ -15,12 +15,24 @@ class Client {
 	}
 
 	/*
+	inline function strToMap (str:String):Map<String, String> {
+		var map = new Map<String, String>();
+		for (i in str.split('&')) {
+			var pair = i.split('=');
+			if (pair.length >= 2) map.set(StringTools.urlDecode(pair[0]), StringTools.urlDecode(pair[1]));
+		}
+		return map;
+	}
+
 	public function getRequestToken (uri:String, callback:String, ?post:Bool = true):RequestToken {
 		if (!version.match(V1)) throw "Request token only applies to OAuth 1.";
 
 		var req = new Request(version, uri, consumer, null, post, null, { oauth_callback:callback } );
 		req.sign();
-		var result = strToMap(req.send());
+		var result = ;
+		req.send(function(){
+			strToMap()
+		});
 
 		if (!result.exists("oauth_token")) throw "Failed to get request token.";
 
