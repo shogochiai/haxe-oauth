@@ -154,7 +154,6 @@ class Http {
 			}
 
 			response.on('data', function(chunk :String) {
-				trace(chunk);
 				responseData += chunk;
 			});
 
