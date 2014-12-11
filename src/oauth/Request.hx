@@ -95,6 +95,7 @@ class Request {
 	}
 
 	function check_and_return(res_str:String, cb:Dynamic){
+		trace(res_str);
 		if (res_str.substr(0, 12) != "access_token"){
 			var res : Dynamic = Json.parse(res_str);
 			error_checker(res);
@@ -104,6 +105,7 @@ class Request {
 			/* access_tokenを通すとき */
 			cb(res_str); // fb : access_token=CAAEIlhJBc5ABAE.....NFKKkaM&expires=5180024
 		}
+		// rtokenを通すときも必要そう
 	}
 
 	function error_checker(res:Dynamic){

@@ -14,7 +14,6 @@ class Client {
 		this.consumer = consumer;
 	}
 
-	/*
 	inline function strToMap (str:String):Map<String, String> {
 		var map = new Map<String, String>();
 		for (i in str.split('&')) {
@@ -24,32 +23,29 @@ class Client {
 		return map;
 	}
 
-	public function getRequestToken (uri:String, callback:String, ?post:Bool = true):RequestToken {
+	public function getRequestToken (uri:String, callback:String, ?post:Bool = true, cb:RequestToken->Void):Void{
 		if (!version.match(V1)) throw "Request token only applies to OAuth 1.";
 
 		var req = new Request(version, uri, consumer, null, post, null, { oauth_callback:callback } );
 		req.sign();
-		var result = ;
-		req.send(function(){
-			strToMap()
+		req.send(function(response){
+			var result:Map<String, String> = strToMap(response);
+			if (!result.exists("oauth_token")) throw "Failed to get request token.";
+			var rtoken:RequestToken = new RequestToken(result.get("oauth_token"), result.get("oauth_token_secret"));
+			cb(rtoken);
 		});
-
-		if (!result.exists("oauth_token")) throw "Failed to get request token.";
-
-		return new RequestToken(result.get("oauth_token"), result.get("oauth_token_secret"));
 	}
 
-	public function getAccessToken1 (uri:String, verifier:String, ?post:Bool = true):Client {
+	public function getAccessToken1 (uri:String, verifier:String, ?post:Bool = true, cb:Client->Void):Void {
 		if (!version.match(V1)) throw "Cannot call an OAuth 1 method from a non-OAuth 1 flow.";
 
-		var result = requestUrlEncoded(uri, post, { oauth_verifier:verifier });
-
-		if (!result.exists("oauth_token") || !result.exists("oauth_token_secret")) throw "Failed to get access token.";
-
-		accessToken = new OAuth1AccessToken(result.get("oauth_token"), result.get("oauth_token_secret"));
-		return this;
+		request(uri, post, { oauth_verifier:verifier }, function(result){
+			if (!result.exists("oauth_token") || !result.exists("oauth_token_secret")) throw "Failed to get access token.";
+			var client = new Client(version, consumer);
+			client.accessToken = new OAuth1AccessToken(result.get("oauth_token"), result.get("oauth_token_secret"));
+			cb(client);
+		});
 	}
-	*/
 
 	public function getAccessToken2 (uri:String, code:String, redirectUri:String, ?post:Bool = true, cb:Dynamic):Void {
 		if (!version.match(V2)) throw "Cannot call an OAuth 2 method from a non-OAuth 2 flow.";
@@ -62,7 +58,7 @@ class Client {
 		}
 
 		request(uri, post, req_param, function(response){
-			var result : Map<String, String> = param_parse(response);
+			var result : Map<String, String> = oauth2ParamParse(response);
 			// var result = jsonToMap(response);
 			// if (!result.exists("access_token")) throw "Failed to get access token.";
 			var client = new Client(version, consumer);
@@ -72,13 +68,13 @@ class Client {
 		});
 	}
 
-	public function param_parse (str:String) : Map<String, String> {
+	public function oauth2ParamParse (str:String) : Map<String, String> {
 		var query_seperated : Array<String> = str.split("&");
 		var atoken : Array<String> = query_seperated[0].split("=");
 		var expires_in : Array<String> = query_seperated[1].split("=");
 		var result = new Map<String, String>();
-		result["access_token"] = atoken[1];
-		result["expires_in"] = expires_in[1];
+		result["access_token"] = if(atoken[0]=="access_token") atoken[1] else "";
+		result["expires_in"] = if(atoken[0]=="expires") expires_in[1] else "";
 		return result;
 	}
 
