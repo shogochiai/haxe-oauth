@@ -95,17 +95,17 @@ class Request {
 	}
 
 	function check_and_return(res_str:String, cb:Dynamic){
-		trace(res_str);
-		if (res_str.substr(0, 12) != "access_token"){
+		if (res_str.substr(0, 11) == "oauth_token" || res_str.substr(0, 12) == "access_token") {
+			cb(res_str); // fb : access_token=CAAEIlhJBc5ABAE.....NFKKkaM&expires=5180024
+		} else if (res_str.substr(0, 1) == "{") {
 			var res : Dynamic = Json.parse(res_str);
 			error_checker(res);
 			/* puserを通すとき */
 			cb({ id: res.id, name: res.name });
 		} else {
-			/* access_tokenを通すとき */
-			cb(res_str); // fb : access_token=CAAEIlhJBc5ABAE.....NFKKkaM&expires=5180024
+			trace(res_str); //<- "invalid request token"が帰ってくる
+			throw "invalid params in Request.hx";
 		}
-		// rtokenを通すときも必要そう
 	}
 
 	function error_checker(res:Dynamic){
@@ -173,10 +173,9 @@ class Request {
 	}
 
 	function baseStringURI ():String {
-		var buf = new StringBuf() ;
-
-		buf.add(scheme.toLowerCase()) ;
-		buf.add("://") ;
+		var buf = new StringBuf();
+		buf.add(scheme.toLowerCase());
+		buf.add("://");
 		var portReg = ~/^([^:]*):([0-9]*)/;
 		var host = if (portReg.match(authority))
 				portReg.matched(1);

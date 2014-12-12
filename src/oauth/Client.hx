@@ -36,14 +36,17 @@ class Client {
 		});
 	}
 
-	public function getAccessToken1 (uri:String, verifier:String, ?post:Bool = true, cb:Client->Void):Void {
+	public function getAccessToken1 (uri:String, request_token:String, verifier:String, ?post:Bool = true, cb:String->String->Void):Void {
 		if (!version.match(V1)) throw "Cannot call an OAuth 1 method from a non-OAuth 1 flow.";
-
-		request(uri, post, { oauth_verifier:verifier }, function(result){
-			if (!result.exists("oauth_token") || !result.exists("oauth_token_secret")) throw "Failed to get access token.";
+		request(uri, post, { oauth_token: request_token, oauth_verifier:verifier }, function(result){
+			if (result.indexOf("oauth_token") < 0  || result.indexOf("oauth_token_secret") < 0) throw "Failed to get access token.";
+			var token_str : String = result.split("&")[0].split("=")[1];
+			var secret_str : String = result.split("&")[1].split("=")[1];
+			var user_id : String = result.split("&")[2].split("=")[1];
+			var screen_name : String = result.split("&")[3].split("=")[1];
 			var client = new Client(version, consumer);
-			client.accessToken = new OAuth1AccessToken(result.get("oauth_token"), result.get("oauth_token_secret"));
-			cb(client);
+			client.accessToken = new OAuth1AccessToken(token_str, secret_str);
+			cb(user_id, screen_name);
 		});
 	}
 
